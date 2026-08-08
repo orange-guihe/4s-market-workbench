@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>导入8月1-6日历史数据</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f6f2ea;
+      color: #1f2733;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin-bottom: 8px; }
+    .desc { color: #687386; margin-bottom: 24px; font-size: 0.92rem; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+      font-size: 0.86rem;
+    }
+    .data-table th, .data-table td {
+      padding: 8px 10px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    .data-table th {
+      background: #1f2733;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .data-table td:first-child, .data-table th:first-child {
+      text-align: left;
+      font-weight: 600;
+    }
+    .data-table tr:hover { background: #f9f7f2; }
+    .btn {
+      display: inline-block;
+      padding: 14px 36px;
+      background: #b4452c;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover { background: #9a3a26; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .result {
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      display: none;
+      font-size: 0.92rem;
+    }
+    .result.success { background: #e8f5e9; color: #2f7d52; display: block; }
+    .result.error { background: #fdecea; color: #c0392b; display: block; }
+    .summary {
+      margin-top: 20px;
+      padding: 16px 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      font-size: 0.88rem;
+    }
+    .summary h3 { font-size: 1rem; margin-bottom: 10px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 4px 0; }
+    .summary-row span:last-child { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>导入8月1-6日历史数据</h1>
+    <p class="desc">以下数据从金山文档「贵阳贵和事业计划日度执行-8月」的「过程指标」表中提取。点击导入按钮后，数据将写入浏览器本地存储，月累计和周累计将自动更新。</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>新媒体<br>线索量</th>
+          <th>新媒体<br>到店量</th>
+          <th>新媒体<br>订单量</th>
+          <th>懂车帝<br>线索量</th>
+          <th>易车<br>线索量</th>
+          <th>网站线索<br>到店量</th>
+          <th>网站线索<br>订单量</th>
+          <th>展厅<br>首次到店</th>
+        </tr>
+      </thead>
+      <tbody id="data-body"></tbody>
+    </table>
+
+    <button class="btn" id="import-btn" onclick="doImport()">导入数据到工作台</button>
+    <div class="result" id="result"></div>
+
+    <div class="summary" id="summary" style="display:none;">
+      <h3>导入后累计预览</h3>
+      <div id="summary-content"></div>
+    </div>
+  </div>
+
+  <script>
+    var historicalData = {
+      '2026-08-01': { 'metric-nm-leads': '8',  'metric-nm-arrivals': '0', 'metric-nm-orders': '0', 'metric-ws-dcd': '26', 'metric-ws-yiche': '20', 'metric-ws-arrivals': '0', 'metric-ws-orders': '0', 'metric-show-first': '4' },
+      '2026-08-02': { 'metric-nm-leads': '3',  'metric-nm-arrivals': '0', 'metric-nm-orders': '0', 'metric-ws-dcd': '20', 'metric-ws-yiche': '20', 'metric-ws-arrivals': '1', 'metric-ws-orders': '0', 'metric-show-first': '5' },
+      '2026-08-03': { 'metric-nm-leads': '7',  'metric-nm-arrivals': '0', 'metric-nm-orders': '0', 'metric-ws-dcd': '20', 'metric-ws-yiche': '19', 'metric-ws-arrivals': '0', 'metric-ws-orders': '0', 'metric-show-first': '2' },
+      '2026-08-04': { 'metric-nm-leads': '6',  'metric-nm-arrivals': '1', 'metric-nm-orders': '0', 'metric-ws-dcd': '20', 'metric-ws-yiche': '26', 'metric-ws-arrivals': '0', 'metric-ws-orders': '0', 'metric-show-first': '8' },
+      '2026-08-05': { 'metric-nm-leads': '5',  'metric-nm-arrivals': '0', 'metric-nm-orders': '0', 'metric-ws-dcd': '20', 'metric-ws-yiche': '23', 'metric-ws-arrivals': '1', 'metric-ws-orders': '0', 'metric-show-first': '5' },
+      '2026-08-06': { 'metric-nm-leads': '3',  'metric-nm-arrivals': '0', 'metric-nm-orders': '0', 'metric-ws-dcd': '26', 'metric-ws-yiche': '20', 'metric-ws-arrivals': '0', 'metric-ws-orders': '0', 'metric-show-first': '4' }
+    };
+
+    var dateLabels = {
+      '2026-08-01': '8月1日', '2026-08-02': '8月2日', '2026-08-03': '8月3日',
+      '2026-08-04': '8月4日', '2026-08-05': '8月5日', '2026-08-06': '8月6日'
+    };
+
+    (function renderTable() {
+      var tbody = document.getElementById('data-body');
+      var keys = ['metric-nm-leads','metric-nm-arrivals','metric-nm-orders','metric-ws-dcd','metric-ws-yiche','metric-ws-arrivals','metric-ws-orders','metric-show-first'];
+      Object.keys(historicalData).forEach(function(date) {
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.textContent = dateLabels[date];
+        tr.appendChild(td);
+        keys.forEach(function(k) {
+          var td2 = document.createElement('td');
+          td2.textContent = historicalData[date][k];
+          tr.appendChild(td2);
+        });
+        tbody.appendChild(tr);
+      });
+    })();
+
+    function doImport() {
+      var result = document.getElementById('result');
+      var btn = document.getElementById('import-btn');
+      btn.disabled = true;
+      btn.textContent = '正在导入...';
+
+      try {
+        var archiveKey = 'trae-4s-market-workbench-archives-v1';
+        var archives = {};
+        try {
+          archives = JSON.parse(localStorage.getItem(archiveKey) || '{}');
+        } catch(e) {}
+
+        Object.keys(historicalData).forEach(function(date) {
+          var existingState = (archives[date] && archives[date].state) ? archives[date].state : {};
+          var newState = Object.assign({}, existingState);
+          Object.keys(historicalData[date]).forEach(function(key) {
+            newState[key] = historicalData[date][key];
+          });
+          newState.__date = date;
+          newState.__savedAt = new Date().toISOString();
+          var wasCarried = archives[date] && archives[date].carriedFrom;
+          archives[date] = {
+            savedAt: new Date().toISOString(),
+            state: newState
+          };
+          if (wasCarried) {
+            archives[date].carriedFrom = archives[date].carriedFrom;
+          }
+        });
+
+        localStorage.setItem(archiveKey, JSON.stringify(archives));
+
+        var monthMaxKey = 'trae-4s-market-workbench-monthly-max-2026-08';
+        var monthMax = {};
+        try { monthMax = JSON.parse(localStorage.getItem(monthMaxKey) || '{}'); } catch(e) {}
+
+        var metricKeys = [
+          'metric-nm-leads','metric-nm-arrivals','metric-nm-orders',
+          'metric-nm-sessions','metric-nm-views','metric-nm-video-leads',
+          'metric-video-douyin-new','metric-video-douyin-old','metric-video-kuaishou','metric-video-shipinhao','metric-video-wangyueche',
+          'metric-ws-dcd','metric-ws-yiche','metric-ws-arrivals','metric-ws-orders',
+          'metric-show-first'
+        ];
+
+        var monthTotals = {};
+        Object.keys(historicalData).forEach(function(date) {
+          metricKeys.forEach(function(key) {
+            var val = parseFloat(historicalData[date][key]);
+            if (!isNaN(val)) {
+              monthTotals[key] = (monthTotals[key] || 0) + val;
+            }
+          });
+        });
+
+        var aug7State = (archives['2026-08-07'] && archives['2026-08-07'].state) || {};
+        metricKeys.forEach(function(key) {
+          var val = parseFloat(aug7State[key]);
+          if (!isNaN(val)) {
+            monthTotals[key] = (monthTotals[key] || 0) + val;
+          }
+        });
+
+        metricKeys.forEach(function(key) {
+          var calculated = monthTotals[key] || 0;
+          var stored = monthMax[key] || 0;
+          monthMax[key] = Math.max(calculated, stored);
+        });
+        localStorage.setItem(monthMaxKey, JSON.stringify(monthMax));
+
+        var weekMaxKey = 'trae-4s-market-workbench-weekly-max-2026-08-03';
+        var weekMax = {};
+        try { weekMax = JSON.parse(localStorage.getItem(weekMaxKey) || '{}'); } catch(e) {}
+
+        var weekTotals = {};
+        ['2026-08-03','2026-08-04','2026-08-05','2026-08-06'].forEach(function(date) {
+          metricKeys.forEach(function(key) {
+            var val = parseFloat(historicalData[date][key]);
+            if (!isNaN(val)) {
+              weekTotals[key] = (weekTotals[key] || 0) + val;
+            }
+          });
+        });
+
+        metricKeys.forEach(function(key) {
+          var val = parseFloat(aug7State[key]);
+          if (!isNaN(val)) {
+            weekTotals[key] = (weekTotals[key] || 0) + val;
+          }
+        });
+
+        metricKeys.forEach(function(key) {
+          var calculated = weekTotals[key] || 0;
+          var stored = weekMax[key] || 0;
+          weekMax[key] = Math.max(calculated, stored);
+        });
+        localStorage.setItem(weekMaxKey, JSON.stringify(weekMax));
+
+        result.className = 'result success';
+        result.textContent = '导入完成！8月1-6日数据已写入本地存储，月累计和周累计已更新。';
+        btn.textContent = '导入成功';
+
+        var summary = document.getElementById('summary');
+        var summaryContent = document.getElementById('summary-content');
+        var summaryData = [
+          { label: '新媒体线索量 (月累计)', val: monthMax['metric-nm-leads'] || 0, target: 200, unit: '' },
+          { label: '新媒体到店量 (月累计)', val: monthMax['metric-nm-arrivals'] || 0, target: 20, unit: '' },
+          { label: '懂车帝线索量 (月累计)', val: monthMax['metric-ws-dcd'] || 0, target: 600, unit: '' },
+          { label: '易车线索量 (月累计)', val: monthMax['metric-ws-yiche'] || 0, target: 600, unit: '' },
+          { label: '网站线索到店量 (月累计)', val: monthMax['metric-ws-arrivals'] || 0, target: 36, unit: '' },
+          { label: '展厅首次到店 (月累计)', val: monthMax['metric-show-first'] || 0, target: 140, unit: '' },
+          { label: '新媒体线索量 (本周累计)', val: weekMax['metric-nm-leads'] || 0, target: 0, unit: '' },
+          { label: '展厅首次到店 (本周累计)', val: weekMax['metric-show-first'] || 0, target: 0, unit: '' }
+        ];
+        summaryContent.innerHTML = summaryData.map(function(item) {
+          var pct = item.target > 0 ? ' (' + Math.round(item.val / item.target * 100) + '%)' : '';
+          return '<div class="summary-row"><span>' + item.label + '</span><span>' + item.val + pct + '</span></div>';
+        }).join('');
+        summary.style.display = 'block';
+
+      } catch(e) {
+        result.className = 'result error';
+        result.textContent = '导入失败：' + e.message;
+        btn.disabled = false;
+        btn.textContent = '重新导入';
+      }
+    }
+  </script>
+</body>
+</html>
