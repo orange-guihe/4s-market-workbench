@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>云端同步配置 · 4S店市场经理工作台</title>
+  <style>
+    :root {
+      --bg: #f6f2ea; --bg2: #ffffff; --ink: #1f2733; --muted: #687386;
+      --rule: #ded6c8; --accent: #b4452c; --accent2: #1f6f78;
+      --ok: #2f7d52; --warn: #b06a1d; --bad: #c0392b;
+      --shadow: 0 18px 50px color-mix(in srgb, var(--ink) 12%, transparent);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34rem),
+                  radial-gradient(circle at top right, color-mix(in srgb, var(--accent2) 10%, transparent), transparent 32rem),
+                  var(--bg);
+      color: var(--ink); font-family: system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.65;
+    }
+    .page { width: min(860px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 72px; }
+    .hero { padding: 36px; background: var(--ink); color: var(--bg2); border-radius: 22px; box-shadow: var(--shadow); margin-bottom: 28px; position: relative; overflow: hidden; }
+    .hero::after { content: ''; position: absolute; width: 280px; height: 280px; border-radius: 50%; right: -100px; top: -100px; background: color-mix(in srgb, var(--accent) 25%, transparent); }
+    .hero h1 { margin: 8px 0 10px; font-size: clamp(1.6rem, 3.5vw, 2.4rem); letter-spacing: -0.03em; position: relative; z-index: 1; }
+    .hero .subtitle { margin: 0; color: color-mix(in srgb, var(--bg2) 72%, transparent); position: relative; z-index: 1; }
+    .hero a.back { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; padding: 8px 16px; border-radius: 999px; background: color-mix(in srgb, var(--bg2) 12%, transparent); color: var(--bg2); text-decoration: none; font-size: 0.88rem; font-weight: 600; position: relative; z-index: 1; transition: background 0.15s; }
+    .hero a.back:hover { background: color-mix(in srgb, var(--bg2) 22%, transparent); }
+    .current-state { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; margin-bottom: 16px; }
+    .current-state.on { background: color-mix(in srgb, var(--ok) 12%, var(--bg)); color: var(--ok); }
+    .current-state.off { background: color-mix(in srgb, var(--muted) 12%, var(--bg)); color: var(--muted); }
+    .current-state .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .step-card { background: var(--bg2); border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow); padding: 28px; margin-bottom: 18px; }
+    .step-num { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 12%, var(--bg2)); color: var(--accent); font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; }
+    .step-card h2 { margin: 0 0 12px; font-size: 1.3rem; letter-spacing: -0.02em; }
+    .step-card p { margin: 0 0 12px; }
+    .step-card ol { margin: 0 0 12px; padding-left: 22px; }
+    .step-card ol li { margin-bottom: 8px; }
+    .step-card .hint { padding: 12px 16px; border-radius: 12px; background: color-mix(in srgb, var(--warn) 10%, var(--bg)); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); font-size: 0.88rem; color: var(--warn); margin-top: 12px; }
+    .step-card .tip { padding: 12px 16px; border-radius: 12px; background: color-mix(in srgb, var(--accent2) 8%, var(--bg)); border: 1px solid color-mix(in srgb, var(--accent2) 25%, transparent); font-size: 0.88rem; color: var(--accent2); margin-top: 12px; }
+    .config-field { margin-bottom: 14px; }
+    .config-field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.92rem; }
+    .config-field input { width: 100%; border: 2px solid var(--rule); border-radius: 10px; padding: 10px 14px; font: 400 0.92rem 'Courier New', monospace; background: var(--bg); color: var(--ink); transition: border-color 0.2s; }
+    .config-field input:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent2) 20%, transparent); }
+    .config-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { border: none; border-radius: 999px; padding: 12px 24px; font: inherit; font-weight: 600; cursor: pointer; transition: all 0.15s; font-size: 0.92rem; }
+    .btn-primary { background: var(--accent2); color: var(--bg2); }
+    .btn-primary:hover { background: color-mix(in srgb, var(--accent2) 85%, var(--ink)); }
+    .btn-secondary { background: var(--bg); border: 1px solid var(--rule); color: var(--ink); }
+    .btn-secondary:hover { border-color: var(--accent2); }
+    .btn-danger { background: color-mix(in srgb, var(--bad) 12%, var(--bg)); border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent); color: var(--bad); }
+    .status-box { padding: 16px 20px; border-radius: 14px; margin-top: 16px; font-weight: 600; display: none; align-items: center; gap: 10px; }
+    .status-box.show { display: flex; }
+    .status-box.ok { background: color-mix(in srgb, var(--ok) 12%, var(--bg)); border: 1px solid color-mix(in srgb, var(--ok) 30%, transparent); color: var(--ok); }
+    .status-box.err { background: color-mix(in srgb, var(--bad) 12%, var(--bg)); border: 1px solid color-mix(in srgb, var(--bad) 30%, transparent); color: var(--bad); }
+    .status-box.syncing { background: color-mix(in srgb, var(--warn) 12%, var(--bg)); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); color: var(--warn); }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .url-box { padding: 10px 14px; border-radius: 8px; background: var(--bg); border: 1px solid var(--rule); font-family: 'Courier New', monospace; font-size: 0.86rem; color: var(--accent2); word-break: break-all; margin: 8px 0; display: block; text-decoration: none; }
+    code.inline { background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px; font-size: 0.85rem; font-family: 'Courier New', monospace; }
+    .mobile-section { background: linear-gradient(135deg, color-mix(in srgb, var(--accent2) 6%, var(--bg2)), var(--bg2)); border: 1px solid color-mix(in srgb, var(--accent2) 20%, transparent); }
+    .screenshot { border: 2px solid var(--rule); border-radius: 10px; padding: 16px; margin: 12px 0; background: var(--bg); font-size: 0.86rem; color: var(--muted); }
+    .screenshot strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>云端同步配置</h1>
+      <p class="subtitle">配置后，手机和电脑共享同一份数据，自动同步。使用 Gitee（国内免费代码托管平台）。</p>
+      <a href="./4s-market-workbench.html" class="back">← 返回工作台</a>
+    </header>
+
+    <div id="current-state-box" class="current-state off">
+      <span class="dot"></span>
+      <span id="current-state-text">云端同步：未配置</span>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h2>注册 Gitee 账号 ✓</h2>
+      <p>您的 Gitee 账号已创建成功！</p>
+      <div class="tip">用户名：<code class="inline">orange-guihe</code>（已完成注册）</div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h2>创建私有仓库 ✓</h2>
+      <p>私有仓库已创建成功！</p>
+      <div class="tip">仓库名：<code class="inline">workbench-data</code>（已创建为私有仓库）</div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h2>生成私人令牌（关键步骤）</h2>
+      <p>点击下方链接打开令牌创建页面，按以下步骤操作：</p>
+      <a href="https://gitee.com/profile/personal_access_tokens/new" target="_blank" class="url-box">点击打开 Gitee 令牌创建页面 →</a>
+      <ol>
+        <li>在描述栏填入 <code class="inline">工作台同步</code></li>
+        <li>权限勾选「<strong>projects</strong>」（查看、创建、更新你的项目）</li>
+        <li>完成滑块验证</li>
+        <li>点击「<strong>提交</strong>」</li>
+        <li>页面会显示一串<strong>40位令牌</strong>（如 <code class="inline">a1b2c3d4e5...</code>）</li>
+        <li><strong>立即复制</strong>这串令牌（只显示一次！关闭后无法再查看）</li>
+        <li>将令牌粘贴到下方输入框</li>
+      </ol>
+      <div class="hint">令牌只显示一次！请务必立即复制。如果忘记了，重新生成一个新的即可。</div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <h2>填写配置并连接</h2>
+      <p>将以下信息填入下方输入框：</p>
+      <div class="config-field">
+        <label for="input-token">私人令牌</label>
+        <input type="text" id="input-token" placeholder="例如：a1b2c3d4e5f6g7h8..." autocomplete="off">
+      </div>
+      <div class="config-field">
+        <label for="input-owner">Gitee 用户名</label>
+        <input type="text" id="input-owner" placeholder="你的 Gitee 用户名（不是昵称）" value="orange-guihe" autocomplete="off">
+      </div>
+      <div class="config-field">
+        <label for="input-repo">仓库名称</label>
+        <input type="text" id="input-repo" placeholder="workbench-data" value="workbench-data" autocomplete="off">
+      </div>
+      <div class="config-actions">
+        <button class="btn btn-primary" id="btn-save">保存并测试连接</button>
+        <button class="btn btn-secondary" id="btn-test">重新测试</button>
+        <button class="btn btn-danger" id="btn-clear">清除配置</button>
+      </div>
+      <div class="status-box" id="status-box">
+        <span class="status-dot"></span>
+        <span id="status-text"></span>
+      </div>
+    </div>
+
+    <div class="step-card mobile-section">
+      <div class="step-num">5</div>
+      <h2>在手机上使用</h2>
+      <p>配置成功后，把工作台放到网上即可手机访问。最简单的方式：</p>
+      <ol>
+        <li>
+          <strong>方式一：发到手机微信</strong><br>
+          把 <code class="inline">4s-market-workbench</code> 整个文件夹通过微信文件传输助手发到手机，用手机浏览器打开 <code class="inline">4s-market-workbench.html</code>。
+        </li>
+        <li>
+          <strong>方式二：部署到免费网站（推荐）</strong><br>
+          打开 <a href="https://app.netlify.com/drop" target="_blank" class="url-box">https://app.netlify.com/drop</a><br>
+          把整个文件夹拖入页面，自动生成一个网址。手机电脑都能通过网址访问，数据自动同步。
+        </li>
+      </ol>
+      <div class="tip">无论哪种方式，只要 Gitee 配置完成，打开工作台后数据自动从云端同步，手机和电脑实时一致。</div>
+    </div>
+  </main>
+
+  <script>
+    var CONFIG_KEY = 'trae-4s-market-workbench-cloud-config';
+    var statusBox = document.getElementById('status-box');
+    var statusText = document.getElementById('status-text');
+    var stateBox = document.getElementById('current-state-box');
+    var stateText = document.getElementById('current-state-text');
+
+    function showStatus(text, type) {
+      statusBox.className = 'status-box show ' + type;
+      statusText.textContent = text;
+    }
+    function hideStatus() { statusBox.className = 'status-box'; }
+
+    function updateCurrentState() {
+      var config = null;
+      try { config = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); } catch (e) {}
+      if (config && config.token && config.owner && config.repo) {
+        stateBox.className = 'current-state on';
+        stateText.textContent = '云端同步：已配置 (' + config.owner + '/' + config.repo + ')';
+      } else {
+        stateBox.className = 'current-state off';
+        stateText.textContent = '云端同步：未配置';
+      }
+    }
+
+    function getFormConfig() {
+      return {
+        token: document.getElementById('input-token').value.trim(),
+        owner: document.getElementById('input-owner').value.trim(),
+        repo: document.getElementById('input-repo').value.trim() || 'workbench-data'
+      };
+    }
+
+    function fillForm(config) {
+      document.getElementById('input-token').value = config.token || '';
+      document.getElementById('input-owner').value = config.owner || '';
+      document.getElementById('input-repo').value = config.repo || 'workbench-data';
+    }
+
+    function saveConfig(config) {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      window.CLOUD_CONFIG = config;
+      window.CLOUD_ENABLED = !!(config.token && config.owner && config.repo);
+      updateCurrentState();
+    }
+
+    function testConnection(config, callback) {
+      var url = 'https://gitee.com/api/v5/repos/' + config.owner + '/' + config.repo + '/contents/test-connection.txt?access_token=' + encodeURIComponent(config.token);
+
+      fetch(url, { method: 'GET' })
+        .then(function (res) {
+          if (res.status === 404) {
+            callback(true);
+          } else if (res.ok) {
+            callback(true);
+          } else if (res.status === 401) {
+            callback(false);
+          } else {
+            callback(false);
+          }
+        })
+        .catch(function (err) {
+          console.error('Connection test failed:', err);
+          callback(false);
+        });
+    }
+
+    document.getElementById('btn-save').addEventListener('click', function () {
+      var config = getFormConfig();
+      if (!config.token || !config.owner || !config.repo) {
+        showStatus('请填写完整的令牌、用户名和仓库名称。', 'err');
+        return;
+      }
+      saveConfig(config);
+      showStatus('配置已保存，正在测试连接...', 'syncing');
+      testConnection(config, function (ok) {
+        if (ok) {
+          showStatus('连接成功！云端同步已启用。返回工作台即可使用。', 'ok');
+        } else {
+          showStatus('连接失败。请检查：1) 令牌是否正确  2) 用户名是否正确（不是昵称）  3) 仓库名是否正确。', 'err');
+        }
+      });
+    });
+
+    document.getElementById('btn-test').addEventListener('click', function () {
+      var config = null;
+      try { config = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); } catch (e) {}
+      if (!config) config = getFormConfig();
+      if (!config.token || !config.owner || !config.repo) {
+        showStatus('请先填写配置并保存。', 'err');
+        return;
+      }
+      showStatus('正在测试连接...', 'syncing');
+      testConnection(config, function (ok) {
+        if (ok) showStatus('连接成功！云端同步正常工作。', 'ok');
+        else showStatus('连接失败。请检查配置是否正确。', 'err');
+      });
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', function () {
+      if (!confirm('确定清除云端配置？清除后工作台将仅使用本地存储。')) return;
+      localStorage.removeItem(CONFIG_KEY);
+      localStorage.removeItem('trae-4s-market-workbench-cloud-sha');
+      localStorage.removeItem('trae-4s-market-workbench-cloud-sync-ts');
+      window.CLOUD_CONFIG = { token: '', owner: '', repo: '' };
+      window.CLOUD_ENABLED = false;
+      fillForm({ token: '', owner: '', repo: 'workbench-data' });
+      hideStatus();
+      updateCurrentState();
+    });
+
+    (function init() {
+      var config = null;
+      try { config = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); } catch (e) {}
+      if (config) {
+        fillForm(config);
+      } else {
+        fillForm({ token: '', owner: 'orange-guihe', repo: 'workbench-data' });
+      }
+      updateCurrentState();
+    })();
+  </script>
+</body>
+</html>
